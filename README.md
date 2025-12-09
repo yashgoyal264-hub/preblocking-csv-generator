@@ -2,6 +2,12 @@
 
 A web application to process CSV files and generate property-constrained batches for hotel booking data.
 
+## 🌐 **Try it Online!**
+
+**🚀 Live Demo:** https://yashgoyal264-hub.github.io/preblocking-csv-generator/
+
+Use the application directly in your browser - no installation required! The client-side version processes everything locally, so your data never leaves your browser.
+
 ## Features
 
 ✅ **Upload CSV files** with hotel booking data  
@@ -20,7 +26,16 @@ A web application to process CSV files and generate property-constrained batches
 ✅ **ZIP download** of all generated batch files  
 ✅ **Responsive web interface** with progress indicators
 
-## Installation & Setup
+## Two Ways to Use
+
+### 🌐 **Option 1: Online (Recommended)**
+Simply visit: **https://yashgoyal264-hub.github.io/preblocking-csv-generator/**
+- No installation needed
+- Works directly in your browser
+- Your data stays private (processed locally)
+- Same features as the local version
+
+### 💻 **Option 2: Local Installation**
 
 1. **Install dependencies:**
 ```bash
