@@ -80,8 +80,15 @@ property_id,checkin,checkout,rooms,room_type_ids,occupancy,booking_source,paymen
 
 **Required columns:**
 - `property_id` (first column): Used for property constraint logic
-- `checkin` (second column): Used for filename date range generation
+- `checkin` (second column): Check-in date - **MUST be in YYYY-MM-DD format**
+- `checkout` (third column): Check-out date - **MUST be in YYYY-MM-DD format**
 - Other columns: Preserved as-is in output batches
+
+**📅 Date Format Requirements:**
+- ✅ **Supported**: `YYYY-MM-DD` (e.g., `2025-12-11`)
+- ✅ **Auto-converted**: `DD/MM/YYYY`, `MM/DD/YYYY`, `DD-MM-YYYY` formats
+- ⚠️ **Output guarantee**: All generated batch files will have dates in `YYYY-MM-DD` format
+- ❌ **Invalid**: Text dates, incomplete dates, or malformed date strings
 
 ## Batch Generation Logic
 

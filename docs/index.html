@@ -285,6 +285,9 @@
                                 <small>or drag and drop</small>
                             </label>
                         </div>
+                        <div style="margin-top: 8px; padding: 8px; background: #e6f3ff; border-radius: 4px; font-size: 0.9rem; color: #0066cc;">
+                            📅 <strong>Date Format:</strong> Checkin/Checkout dates must be in YYYY-MM-DD format (e.g., 2025-12-11)
+                        </div>
                         <div class="file-info" id="fileInfo"></div>
                     </div>
                     
@@ -419,6 +422,67 @@
             }
         });
 
+        // Date validation and formatting function
+        function validateAndFormatDate(dateStr, context) {
+            if (!dateStr || dateStr.trim() === '') {
+                throw new Error(`Empty date found in ${context}`);
+            }
+            
+            // Remove any quotes and trim
+            const cleanDate = dateStr.replace(/['"]/g, '').trim();
+            
+            // Check if already in YYYY-MM-DD format
+            const isoFormat = /^\d{4}-\d{2}-\d{2}$/;
+            if (isoFormat.test(cleanDate)) {
+                // Validate that it's a real date
+                const date = new Date(cleanDate);
+                if (isNaN(date.getTime())) {
+                    throw new Error(`Invalid date format in ${context}: ${cleanDate}`);
+                }
+                return cleanDate;
+            }
+            
+            // Try to parse other common formats and convert to YYYY-MM-DD
+            let date;
+            
+            // Try DD/MM/YYYY or MM/DD/YYYY
+            if (cleanDate.includes('/')) {
+                const parts = cleanDate.split('/');
+                if (parts.length === 3) {
+                    // Assume DD/MM/YYYY format (European)
+                    date = new Date(parts[2], parts[1] - 1, parts[0]);
+                    if (isNaN(date.getTime())) {
+                        // Try MM/DD/YYYY format (US)
+                        date = new Date(parts[2], parts[0] - 1, parts[1]);
+                    }
+                }
+            }
+            
+            // Try DD-MM-YYYY or MM-DD-YYYY
+            else if (cleanDate.includes('-') && !isoFormat.test(cleanDate)) {
+                const parts = cleanDate.split('-');
+                if (parts.length === 3 && parts[0].length <= 2) {
+                    // Assume DD-MM-YYYY format
+                    date = new Date(parts[2], parts[1] - 1, parts[0]);
+                    if (isNaN(date.getTime())) {
+                        // Try MM-DD-YYYY format
+                        date = new Date(parts[2], parts[0] - 1, parts[1]);
+                    }
+                }
+            }
+            
+            if (!date || isNaN(date.getTime())) {
+                throw new Error(`Unable to parse date format in ${context}: ${cleanDate}. Please use YYYY-MM-DD format.`);
+            }
+            
+            // Format as YYYY-MM-DD
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            
+            return `${year}-${month}-${day}`;
+        }
+
         async function processCSVFile(file, batchName) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -431,10 +495,18 @@
                         
                         console.log(`Processing CSV: ${rows.length} rows`);
                         
-                        // Parse CSV rows
-                        const parsedRows = rows.map(line => {
+                        // Parse CSV rows and validate date format
+                        const parsedRows = rows.map((line, index) => {
                             // Simple CSV parsing - split by comma
-                            return line.split(',');
+                            const columns = line.split(',');
+                            
+                            // Validate and normalize dates (columns 1 and 2 are checkin/checkout)
+                            if (columns.length > 2) {
+                                columns[1] = validateAndFormatDate(columns[1], `Row ${index + 2}, checkin`);
+                                columns[2] = validateAndFormatDate(columns[2], `Row ${index + 2}, checkout`);
+                            }
+                            
+                            return columns;
                         });
                         
                         // Group by property_id (first column)
