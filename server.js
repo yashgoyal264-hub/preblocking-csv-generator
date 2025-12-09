@@ -129,8 +129,18 @@ function processCSV(csvFilePath, batchName, jobId) {
                 
                 // Validate and normalize dates (columns 1 and 2 are checkin/checkout)
                 if (columns.length > 2) {
-                    columns[1] = validateAndFormatDate(columns[1], `Row ${index + 2}, checkin`);
-                    columns[2] = validateAndFormatDate(columns[2], `Row ${index + 2}, checkout`);
+                    const originalCheckin = columns[1];
+                    const originalCheckout = columns[2];
+                    
+                    try {
+                        columns[1] = validateAndFormatDate(originalCheckin, `Row ${index + 2}, checkin`);
+                        columns[2] = validateAndFormatDate(originalCheckout, `Row ${index + 2}, checkout`);
+                        
+                        console.log(`Row ${index + 2}: ${originalCheckin} -> ${columns[1]}, ${originalCheckout} -> ${columns[2]}`);
+                    } catch (error) {
+                        console.error(`Date validation error in row ${index + 2}:`, error.message);
+                        throw error;
+                    }
                 }
                 
                 return columns;
@@ -165,8 +175,17 @@ function processCSV(csvFilePath, batchName, jobId) {
                 
                 // Get date range for filename
                 const checkinDates = batch.map(row => row[1]); // checkin column
-                const minDate = new Date(Math.min(...checkinDates.map(d => new Date(d))));
-                const maxDate = new Date(Math.max(...checkinDates.map(d => new Date(d))));
+                console.log('Checkin dates for filename:', checkinDates);
+                
+                // Parse dates and find min/max
+                const validDates = checkinDates.map(dateStr => new Date(dateStr)).filter(d => !isNaN(d.getTime()));
+                
+                if (validDates.length === 0) {
+                    throw new Error('No valid dates found for filename generation');
+                }
+                
+                const minDate = new Date(Math.min(...validDates));
+                const maxDate = new Date(Math.max(...validDates));
                 
                 const minDay = minDate.getDate().toString().padStart(2, '0');
                 const maxDay = maxDate.getDate().toString().padStart(2, '0');
