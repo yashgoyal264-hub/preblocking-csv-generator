@@ -111,7 +111,7 @@ function validateAndFormatDate(dateStr, context) {
 }
 
 // CSV Processing Logic
-function processCSV(csvFilePath, batchName, jobId) {
+function processCSV(csvFilePath, batchName, jobId, maxBatchSize = 50) {
     return new Promise((resolve, reject) => {
         try {
             // Read CSV file
@@ -160,7 +160,7 @@ function processCSV(csvFilePath, batchName, jobId) {
             console.log(`Unique properties: ${uniqueProperties.length}`);
             
             // Generate batches with constraints
-            const batches = generateBatches(propertyBookings, header);
+            const batches = generateBatches(propertyBookings, header, maxBatchSize);
             
             // Create batch directory for this job
             const jobBatchDir = path.join(batchesDir, jobId);
@@ -236,7 +236,7 @@ function processCSV(csvFilePath, batchName, jobId) {
     });
 }
 
-function generateBatches(propertyBookings, header) {
+function generateBatches(propertyBookings, header, maxBatchSize = 50) {
     // Create a pool of all bookings
     const allBookings = [];
     for (const [propId, bookings] of Object.entries(propertyBookings)) {
@@ -253,7 +253,7 @@ function generateBatches(propertyBookings, header) {
         const usedIndices = [];
         
         // Build current batch respecting constraints
-        for (let i = 0; i < allBookings.length && currentBatch.length < 50; i++) {
+        for (let i = 0; i < allBookings.length && currentBatch.length < maxBatchSize; i++) {
             const booking = allBookings[i];
             const propertyId = booking[0];
             
@@ -284,7 +284,7 @@ function generateBatches(propertyBookings, header) {
 // Routes
 app.post('/api/process-csv', upload.single('csvFile'), async (req, res) => {
     try {
-        const { batchName } = req.body;
+        const { batchName, maxBatchSize } = req.body;
         const csvFile = req.file;
         const jobId = req.jobId;
         
@@ -296,9 +296,14 @@ app.post('/api/process-csv', upload.single('csvFile'), async (req, res) => {
             return res.status(400).json({ error: 'Batch name is required' });
         }
         
-        console.log(`Processing job ${jobId}: ${csvFile.originalname}`);
+        const batchSizeLimit = parseInt(maxBatchSize) || 50;
+        if (batchSizeLimit < 1 || batchSizeLimit > 10000) {
+            return res.status(400).json({ error: 'Max batch size must be between 1 and 10,000' });
+        }
         
-        const result = await processCSV(csvFile.path, batchName, jobId);
+        console.log(`Processing job ${jobId}: ${csvFile.originalname} with max batch size ${batchSizeLimit}`);
+        
+        const result = await processCSV(csvFile.path, batchName, jobId, batchSizeLimit);
         
         // Clean up uploaded file
         fs.unlinkSync(csvFile.path);

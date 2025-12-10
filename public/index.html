@@ -63,7 +63,8 @@
             color: #333;
         }
         
-        .form-group input[type="text"] {
+        .form-group input[type="text"],
+        .form-group input[type="number"] {
             width: 100%;
             padding: 12px 15px;
             border: 2px solid #e1e5e9;
@@ -72,7 +73,8 @@
             transition: border-color 0.3s;
         }
         
-        .form-group input[type="text"]:focus {
+        .form-group input[type="text"]:focus,
+        .form-group input[type="number"]:focus {
             outline: none;
             border-color: #667eea;
         }
@@ -259,6 +261,12 @@
                     </div>
                     
                     <div class="form-group">
+                        <label for="maxBatchSize">Maximum Bookings per Batch:</label>
+                        <input type="number" id="maxBatchSize" name="maxBatchSize" value="50" min="1" max="10000" placeholder="e.g., 50" required>
+                        <small style="color: #666; font-size: 0.9rem;">Enter the maximum number of bookings allowed in each batch (1-10,000)</small>
+                    </div>
+                    
+                    <div class="form-group">
                         <label>Upload CSV File:</label>
                         <div class="file-upload">
                             <input type="file" id="csvFile" name="csvFile" accept=".csv" required>
@@ -345,6 +353,7 @@
             
             const formData = new FormData();
             const batchName = document.getElementById('batchName').value;
+            const maxBatchSize = parseInt(document.getElementById('maxBatchSize').value);
             const csvFile = csvFileInput.files[0];
             
             if (!csvFile) {
@@ -352,7 +361,13 @@
                 return;
             }
             
+            if (!maxBatchSize || maxBatchSize < 1 || maxBatchSize > 10000) {
+                showError('Please enter a valid batch size (1-10,000)');
+                return;
+            }
+            
             formData.append('batchName', batchName);
+            formData.append('maxBatchSize', maxBatchSize);
             formData.append('csvFile', csvFile);
             
             showLoading(true);

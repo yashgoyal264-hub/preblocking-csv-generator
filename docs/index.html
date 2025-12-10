@@ -63,7 +63,8 @@
             color: #333;
         }
         
-        .form-group input[type="text"] {
+        .form-group input[type="text"],
+        .form-group input[type="number"] {
             width: 100%;
             padding: 12px 15px;
             border: 2px solid #e1e5e9;
@@ -72,7 +73,8 @@
             transition: border-color 0.3s;
         }
         
-        .form-group input[type="text"]:focus {
+        .form-group input[type="text"]:focus,
+        .form-group input[type="number"]:focus {
             outline: none;
             border-color: #667eea;
         }
@@ -276,6 +278,12 @@
                     </div>
                     
                     <div class="form-group">
+                        <label for="maxBatchSize">Maximum Bookings per Batch:</label>
+                        <input type="number" id="maxBatchSize" name="maxBatchSize" value="50" min="1" max="10000" placeholder="e.g., 50" required>
+                        <small style="color: #666; font-size: 0.9rem;">Enter the maximum number of bookings allowed in each batch (1-10,000)</small>
+                    </div>
+                    
+                    <div class="form-group">
                         <label>Upload CSV File:</label>
                         <div class="file-upload">
                             <input type="file" id="csvFile" name="csvFile" accept=".csv" required>
@@ -372,10 +380,16 @@
             e.preventDefault();
             
             const batchName = document.getElementById('batchName').value;
+            const maxBatchSize = parseInt(document.getElementById('maxBatchSize').value);
             const csvFile = csvFileInput.files[0];
             
             if (!csvFile) {
                 showError('Please select a CSV file');
+                return;
+            }
+            
+            if (!maxBatchSize || maxBatchSize < 1 || maxBatchSize > 10000) {
+                showError('Please enter a valid batch size (1-10,000)');
                 return;
             }
             
@@ -385,7 +399,7 @@
             results.style.display = 'none';
             
             try {
-                const result = await processCSVFile(csvFile, batchName);
+                const result = await processCSVFile(csvFile, batchName, maxBatchSize);
                 displayResults(result);
                 
             } catch (error) {
@@ -483,7 +497,7 @@
             return `${year}-${month}-${day}`;
         }
 
-        async function processCSVFile(file, batchName) {
+        async function processCSVFile(file, batchName, maxBatchSize = 50) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.onload = function(e) {
@@ -533,7 +547,7 @@
                         console.log(`Unique properties: ${uniqueProperties.length}`);
                         
                         // Generate batches with constraints
-                        const batches = generateBatches(propertyBookings);
+                        const batches = generateBatches(propertyBookings, maxBatchSize);
                         
                         // Create batch files
                         batchFiles = [];
@@ -613,7 +627,7 @@
             });
         }
 
-        function generateBatches(propertyBookings) {
+        function generateBatches(propertyBookings, maxBatchSize = 50) {
             // Create a pool of all bookings
             const allBookings = [];
             for (const [propId, bookings] of Object.entries(propertyBookings)) {
@@ -630,7 +644,7 @@
                 const usedIndices = [];
                 
                 // Build current batch respecting constraints
-                for (let i = 0; i < allBookings.length && currentBatch.length < 50; i++) {
+                for (let i = 0; i < allBookings.length && currentBatch.length < maxBatchSize; i++) {
                     const booking = allBookings[i];
                     const propertyId = booking[0];
                     
