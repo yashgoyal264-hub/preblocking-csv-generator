@@ -253,7 +253,7 @@ function generateBatches(propertyBookings, header) {
         const usedIndices = [];
         
         // Build current batch respecting constraints
-        for (let i = 0; i < allBookings.length && currentBatch.length < 1000; i++) {
+        for (let i = 0; i < allBookings.length && currentBatch.length < 50; i++) {
             const booking = allBookings[i];
             const propertyId = booking[0];
             

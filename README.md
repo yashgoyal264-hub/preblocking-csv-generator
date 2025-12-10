@@ -13,7 +13,7 @@ Use the application directly in your browser - no installation required! The cli
 ✅ **Upload CSV files** with hotel booking data  
 ✅ **Custom batch naming** with user-provided names  
 ✅ **Smart batch generation** with property constraints:
-- Maximum 1000 bookings per batch
+- Maximum 50 bookings per batch
 - Maximum 2 bookings per property per batch
 - Mixed properties within each batch
 
@@ -98,7 +98,7 @@ The application uses an optimized algorithm:
 2. **Group** bookings by property_id
 3. **Generate batches** sequentially:
    - Add up to 2 bookings from each available property
-   - Stop when batch reaches 1000 bookings or no more valid bookings
+   - Stop when batch reaches 50 bookings or no more valid bookings
    - Create new batch and repeat
 4. **Name files** using format: `{batchName}-{minDay}-{maxDay}-{batchNumber}.csv`
 
@@ -131,16 +131,16 @@ csv-batch-processor/
 - **File Handling**: Multer for uploads, Archiver for ZIP creation
 - **Constraints**: 
   - Max 2 bookings per property per batch
-  - Max 1000 bookings per batch
+  - Max 50 bookings per batch
   - Files auto-cleaned after download
 
 ## Example Output
 
 For a CSV with 2,328 bookings across 103 properties, you might get:
-- **Batch 1**: 1000 bookings (500 properties, 2 each from each)
-- **Batch 2**: 1000 bookings (remaining properties with additional bookings)
-- **Batch 3**: 328 bookings (final remaining bookings)
-- **Total**: ~2-3 batch files for this data size (much more efficient!)
+- **Batch 1**: 50 bookings (25 properties, 2 each from each)
+- **Batch 2**: 50 bookings (next 25 properties, 2 each from each)
+- **Batch 47**: 28 bookings (final remaining bookings)
+- **Total**: ~47 batch files for this data size
 
 ## Troubleshooting
 
